@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Visual Therapy Game</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    background:#000;color:#fff;font-family:Arial,sans-serif;
+    overflow:hidden;touch-action:none;position:fixed;width:100%;height:100%;
+}
+#setupScreen{
+    position:fixed;inset:0;background:#000;display:flex;
+    justify-content:center;align-items:center;z-index:1000;padding:20px
+}
+#setupScreen.hidden{display:none}
+.setup-container{
+    background:#1a1a1a;padding:25px;border-radius:10px;
+    border:2px solid #00ff00;width:100%;max-width:600px
+}
+.form-section{margin-bottom:12px}
+label{color:#00ff00;font-weight:bold}
+input,select{
+    width:100%;padding:10px;margin-top:6px;
+    background:#000;border:2px solid #555;color:#fff
+}
+button{
+    width:100%;padding:15px;font-size:18px;
+    background:#00ff00;color:#000;border:none;margin-top:10px
+}
+canvas{position:fixed;inset:0}
+#stats{
+    position:fixed;top:5px;left:5px;font-size:12px;
+    background:rgba(0,0,0,.8);padding:6px;border-radius:4px
+}
+#controls{position:fixed;top:5px;right:5px;display:flex;gap:6px}
+.control-btn{
+    background:#000;color:#fff;border:2px solid;padding:6px 12px
+}
+.control-btn.pause{border-color:#ffaa00;color:#ffaa00}
+.control-btn.restart{border-color:#ff4444;color:#ff4444}
+#levelComplete,#sessionComplete{
+    position:fixed;inset:0;background:rgba(0,0,0,.95);
+    display:none;justify-content:center;align-items:center;
+    text-align:center;padding:20px;z-index:100
+}
+</style>
+</head>
+
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen">
+<div class="setup-container">
+<h2 style="color:#00ff00;text-align:center">Visual Therapy Game</h2>
+
+<div class="form-section">
+<label>Name</label>
+<input id="participantName" type="text">
+</div>
+
+<div class="form-section">
+<label>Age</label>
+<input id="participantAge" type="number">
+</div>
+
+<div class="form-section">
+<label>Gender</label>
+<select id="participantGender">
+<option value="">Select</option>
+<option>Male</option><option>Female</option><option>Other</option>
+</select>
+</div>
+
+<div class="form-section">
+<label>Eye Condition</label>
+<select id="participantEyeCondition">
+<option value="">Select</option>
+<option>Normal vision</option>
+<option>Reduced vision in one eye</option>
+<option>Reduced vision in both eyes</option>
+</select>
+</div>
+
+<div class="form-section">
+<label>Gaming Experience</label>
+<select id="participantGamingExp">
+<option value="">Select</option>
+<option>Never</option><option>Rarely</option>
+<option>Occasionally</option><option>Regularly</option>
+</select>
+</div>
+
+<button id="startBtn">START GAME</button>
+</div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="stats">
+<div>Level: <span id="level">1</span>/10</div>
+<div>Score: <span id="score">0</span></div>
+<div>Accuracy: <span id="accuracy">0</span>%</div>
+</div>
+
+<div id="controls">
+<button class="control-btn pause" onclick="togglePause()">PAUSE</button>
+<button class="control-btn restart" onclick="location.reload()">RESTART</button>
+</div>
+
+<div id="levelComplete">
+<div>
+<h2 style="color:#00ff00">LEVEL COMPLETE</h2>
+<button onclick="nextLevel()">NEXT</button>
+</div>
+</div>
+
+<div id="sessionComplete"></div>
+
+<script>
+// ---------------- DATA ----------------
+let participantInfo = {};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize(){
+    canvas.width=innerWidth;
+    canvas.height=innerHeight;
+}
+resize();window.addEventListener('resize',resize);
+
+// ---------------- GAME STATE ----------------
+let gameState={
+    running:false,paused:false,level:1,score:0,
+    hits:0,misses:0,startTime:0,
+    levelTimes:[],levelAcc:[]
+};
+
+const basket={x:0,y:0,width:70,height:25,speed:8};
+const balls=[];
+const keys={};
+
+const LEVELS={
+1:{target:100,speed:3},
+2:{target:100,speed:3.5},
+3:{target:100,speed:4},
+4:{target:150,speed:4.5},
+5:{target:150,speed:5},
+6:{target:150,speed:5.5},
+7:{target:200,speed:6},
+8:{target:200,speed:6.5},
+9:{target:200,speed:7},
+10:{target:250,speed:7.5}
+};
+
+// ---------------- SETUP ----------------
+document.getElementById('startBtn').onclick=()=>{
+    const name=participantName.value.trim();
+    const age=participantAge.value.trim();
+    const gender=participantGender.value;
+    const eye=participantEyeCondition.value;
+    const game=participantGamingExp.value;
+
+    if(!name||!age||!gender||!eye||!game){
+        alert("Fill all fields");
+        return;
+    }
+
+    participantInfo={name,age,gender,eyeCondition:eye,gamingExperience:game};
+    setupScreen.classList.add('hidden');
+    startGame();
+};
+
+// ---------------- GAME LOGIC ----------------
+function startGame(){
+    basket.x=canvas.width/2;
+    basket.y=canvas.height*0.85;
+    gameState.running=true;
+    gameState.startTime=Date.now();
+    spawn();
+    loop();
+}
+
+function spawn(){
+    if(!gameState.running)return;
+    const r=Math.random()<0.35?15:8;
+    balls.push({
+        x:Math.random()*canvas.width,
+        y:-20,radius:r,
+        type:r>10?'good':'bad',
+        speed:LEVELS[gameState.level].speed
+    });
+    setTimeout(spawn,600);
+}
+
+function loop(){
+    if(!gameState.running)return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    balls.forEach((b,i)=>{
+        b.y+=b.speed;
+        ctx.fillStyle=b.type==='good'?'red':'blue';
+        ctx.beginPath();ctx.arc(b.x,b.y,b.radius,0,Math.PI*2);ctx.fill();
+
+        if(b.y>basket.y-15 && Math.abs(b.x-basket.x)<basket.width/2){
+            if(b.type==='good'){gameState.score+=10;gameState.hits++}
+            else{gameState.score=Math.max(0,gameState.score-8);gameState.misses++}
+            balls.splice(i,1);
+        }
+    });
+
+    if(keys.ArrowLeft)basket.x-=basket.speed;
+    if(keys.ArrowRight)basket.x+=basket.speed;
+
+    ctx.strokeStyle='blue';
+    ctx.strokeRect(basket.x-basket.width/2,basket.y,basket.width,basket.height);
+
+    updateUI();
+    requestAnimationFrame(loop);
+}
+
+function updateUI(){
+    level.textContent=gameState.level;
+    score.textContent=gameState.score;
+    accuracy.textContent=
+        gameState.hits+gameState.misses
+        ?Math.round(gameState.hits/(gameState.hits+gameState.misses)*100):0;
+
+    if(gameState.score>=LEVELS[gameState.level].target){
+        gameState.running=false;
+        if(gameState.level===10)finishSession();
+        else levelComplete.style.display='flex';
+    }
+}
+
+function nextLevel(){
+    levelComplete.style.display='none';
+    gameState.level++;
+    gameState.score=0;
+    gameState.hits=0;
+    gameState.misses=0;
+    balls.length=0;
+    gameState.running=true;
+}
+
+function finishSession(){
+    sessionComplete.innerHTML=`
+    <div>
+    <h2 style="color:#00ff00">SESSION COMPLETE</h2>
+    <p>Name: ${participantInfo.name}</p>
+    <p>Age: ${participantInfo.age}</p>
+    <p>Accuracy: ${accuracy.textContent}%</p>
+    <button onclick="location.reload()">PLAY AGAIN</button>
+    </div>`;
+    sessionComplete.style.display='flex';
+}
+
+// ---------------- INPUT FIX ----------------
+window.addEventListener('keydown',e=>{
+    if(['INPUT','SELECT'].includes(e.target.tagName))return;
+    keys[e.key]=true;
+    if(e.key===' ')togglePause();
+    e.preventDefault();
+});
+window.addEventListener('keyup',e=>{
+    if(['INPUT','SELECT'].includes(e.target.tagName))return;
+    keys[e.key]=false;
+});
+
+function togglePause(){
+    gameState.running=!gameState.running;
+    if(gameState.running)loop();
+}
+</script>
+
+</body>
+</html>
