@@ -355,6 +355,29 @@
         button.continue-btn:active {
             background: #0052cc;
         }
+        .submit-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            display: none;
+        }
+        .submit-status.success {
+            background: #1a4d1a;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+        }
+        .submit-status.error {
+            background: #4d1a1a;
+            color: #ff4444;
+            border: 2px solid #ff4444;
+        }
+        .submit-status.sending {
+            background: #4d4d1a;
+            color: #ffaa00;
+            border: 2px solid #ffaa00;
+        }
     </style>
 </head>
 <body>
@@ -859,11 +882,85 @@
                     <h3 style="color: #00ff00; margin-top: 10px; margin-bottom: 6px; font-size: 14px;">⏱️ Level Times & Accuracy:</h3>
                     ${levelTimesHTML}
                     
-                    <button class="continue-btn" onclick="location.reload()" style="background: #00cc00; width: 100%; padding: 12px 30px; font-size: 16px; margin-top: 10px;">🔄 PLAY AGAIN</button>
+                    <div id="submitStatus" class="submit-status"></div>
+                    
+                    <button class="continue-btn" onclick="submitResults()" style="background: #0066ff; width: 100%; padding: 12px 30px; font-size: 16px; margin-top: 10px;">📤 SUBMIT RESULTS</button>
+                    <button class="continue-btn" onclick="location.reload()" style="background: #00cc00; width: 100%; padding: 12px 30px; font-size: 16px; margin-top: 8px;">🔄 PLAY AGAIN</button>
+                    
+                    <div style="margin-top: 10px; padding: 8px; background: #2a2a2a; border-radius: 5px; font-size: 10px; color: #888;">
+                        Click "SUBMIT RESULTS" to send data automatically, or take a screenshot as backup.
+                    </div>
                 </div>
             `;
             
             document.getElementById('sessionComplete').style.display = 'block';
+            
+            // Store results data for submission
+            window.resultsData = {
+                name: participantInfo.name || 'N/A',
+                age: participantInfo.age || 'N/A',
+                gender: participantInfo.gender || 'N/A',
+                eyeCondition: participantInfo.eyeCondition || 'N/A',
+                gamingExperience: participantInfo.gamingExperience || 'N/A',
+                totalTime: `${minutes}m ${seconds}s`,
+                accuracy: weightedTotalAccuracy,
+                totalHits: totalHits,
+                totalMisses: totalMisses,
+                levelTimes: levelTimesStr,
+                levelAccuracies: levelAccuraciesStr
+            };
+        }
+
+        // Function to submit results to Google Forms
+        async function submitResults() {
+            const statusDiv = document.getElementById('submitStatus');
+            const submitBtn = event.target;
+            
+            // Check if Google Form is configured
+            if (GOOGLE_FORM_URL === 'YOUR_GOOGLE_FORM_URL_HERE') {
+                statusDiv.className = 'submit-status error';
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '⚠️ Form not configured yet. Please take a screenshot instead.';
+                return;
+            }
+            
+            statusDiv.className = 'submit-status sending';
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '⏳ Sending data...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append(FORM_FIELDS.name, window.resultsData.name);
+                formData.append(FORM_FIELDS.age, window.resultsData.age);
+                formData.append(FORM_FIELDS.gender, window.resultsData.gender);
+                formData.append(FORM_FIELDS.eyeCondition, window.resultsData.eyeCondition);
+                formData.append(FORM_FIELDS.gamingExp, window.resultsData.gamingExperience);
+                formData.append(FORM_FIELDS.totalTime, window.resultsData.totalTime);
+                formData.append(FORM_FIELDS.accuracy, window.resultsData.accuracy);
+                formData.append(FORM_FIELDS.totalHits, window.resultsData.totalHits);
+                formData.append(FORM_FIELDS.totalMisses, window.resultsData.totalMisses);
+                formData.append(FORM_FIELDS.levelTimes, window.resultsData.levelTimes);
+                formData.append(FORM_FIELDS.levelAccuracies, window.resultsData.levelAccuracies);
+                
+                // Submit to Google Forms
+                await fetch(GOOGLE_FORM_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: formData
+                });
+                
+                // Success (no-cors means we can't check response, but submission works)
+                statusDiv.className = 'submit-status success';
+                statusDiv.innerHTML = '✅ Results submitted successfully! Thank you!';
+                submitBtn.style.display = 'none';
+                
+            } catch (error) {
+                statusDiv.className = 'submit-status error';
+                statusDiv.innerHTML = '❌ Submission failed. Please take a screenshot.';
+                submitBtn.disabled = false;
+            }
         }
 
         function updateDisplay() {
