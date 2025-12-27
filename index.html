@@ -276,21 +276,20 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.98);
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid #ffaa00;
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #ffaa00;
             text-align: center;
             display: none;
             z-index: 100;
             max-width: 700px;
             width: 95%;
-            max-height: 98vh;
+            max-height: 95vh;
             overflow-y: auto;
-            overflow-x: hidden;
         }
         .complete-title {
-            font-size: 28px;
-            margin-bottom: 15px;
+            font-size: 22px;
+            margin-bottom: 10px;
             color: #00ff00;
         }
         .complete-info {
@@ -298,20 +297,20 @@
             margin: 10px 0;
         }
         .results-table {
-            margin: 15px auto;
+            margin: 10px auto;
             background: #1a1a1a;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
             border: 2px solid #00ff00;
         }
         .results-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 10px;
-            margin: 5px 0;
+            padding: 6px 8px;
+            margin: 3px 0;
             background: #2a2a2a;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
         }
         .results-label {
             color: #aaa;
@@ -323,24 +322,24 @@
         }
         .level-times-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 8px;
-            margin: 15px 0;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin: 10px 0;
         }
         .level-time-box {
             background: #2a2a2a;
-            padding: 8px;
+            padding: 5px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
         }
         .screenshot-instruction {
-            margin: 15px 0;
-            padding: 15px;
+            margin: 8px 0;
+            padding: 10px;
             background: #ff6600;
             color: #000;
             font-weight: bold;
             border-radius: 5px;
-            font-size: 18px;
+            font-size: 14px;
         }
         button.continue-btn {
             margin-top: 15px;
@@ -355,74 +354,6 @@
         }
         button.continue-btn:active {
             background: #0052cc;
-        }
-
-        /* Mobile optimization for results page */
-        @media (max-height: 700px) {
-            .complete-title {
-                font-size: 20px !important;
-                margin-bottom: 8px !important;
-            }
-            
-            .screenshot-instruction {
-                margin: 8px 0 !important;
-                padding: 8px !important;
-                font-size: 14px !important;
-            }
-            
-            .participant-info {
-                padding: 8px !important;
-                margin: 8px 0 !important;
-            }
-            
-            .participant-info h3 {
-                font-size: 14px !important;
-                margin-bottom: 6px !important;
-            }
-            
-            .participant-info-row {
-                padding: 3px 0 !important;
-                font-size: 11px !important;
-            }
-            
-            .results-table {
-                margin: 8px auto !important;
-                padding: 10px !important;
-            }
-            
-            .results-table h2 {
-                font-size: 16px !important;
-                margin-bottom: 6px !important;
-            }
-            
-            .results-row {
-                padding: 5px 8px !important;
-                margin: 3px 0 !important;
-                font-size: 11px !important;
-            }
-            
-            .level-times-grid {
-                gap: 5px !important;
-                margin: 8px 0 !important;
-                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)) !important;
-            }
-            
-            .level-time-box {
-                padding: 5px !important;
-                font-size: 10px !important;
-            }
-            
-            .results-table h3 {
-                font-size: 13px !important;
-                margin-top: 8px !important;
-                margin-bottom: 5px !important;
-            }
-            
-            button.continue-btn {
-                margin-top: 8px !important;
-                padding: 12px 30px !important;
-                font-size: 16px !important;
-            }
         }
     </style>
 </head>
@@ -567,15 +498,6 @@
             speed: 8
         };
 
-        // Participant information storage
-        const participantInfo = {
-            name: '',
-            age: '',
-            gender: '',
-            eyeCondition: '',
-            gamingExperience: ''
-        };
-
         const balls = [];
         const keys = {};
 
@@ -661,6 +583,11 @@
             participantInfo.eyeCondition = document.getElementById('participantEyeCondition').value;
             participantInfo.gamingExperience = document.getElementById('participantGamingExp').value;
         }
+
+        startBtn.addEventListener('click', () => {
+            setupScreen.classList.add('hidden');
+            startGame();
+        });
 
         // Level Configuration - Progressive difficulty with increasing basket size
         const LEVEL_CONFIG = {
@@ -879,65 +806,60 @@
                 <div class="complete-title">🎯 SESSION COMPLETE! 🎯</div>
                 
                 <div class="screenshot-instruction">
-                    📸 TAKE SCREENSHOT NOW 📸
+                    📸 SCREENSHOT THIS PAGE 📸
                 </div>
                 
                 <div class="participant-info">
-                    <h3 style="color: #00ff00; margin-bottom: 10px; font-size: 16px;">👤 PARTICIPANT INFO</h3>
+                    <h3 style="color: #00ff00; margin-bottom: 8px; font-size: 15px;">👤 PARTICIPANT INFO</h3>
                     <div class="participant-info-row">
                         <span class="participant-info-label">Name:</span>
                         <span class="participant-info-value">${participantInfo.name || 'N/A'}</span>
                     </div>
                     <div class="participant-info-row">
                         <span class="participant-info-label">Age:</span>
-                        <span class="participant-info-value">${participantInfo.age || 'N/A'} years</span>
+                        <span class="participant-info-value">${participantInfo.age || 'N/A'} yrs</span>
                     </div>
                     <div class="participant-info-row">
                         <span class="participant-info-label">Gender:</span>
                         <span class="participant-info-value">${participantInfo.gender || 'N/A'}</span>
                     </div>
                     <div class="participant-info-row">
-                        <span class="participant-info-label">Eye Condition:</span>
+                        <span class="participant-info-label">Eye:</span>
                         <span class="participant-info-value">${participantInfo.eyeCondition || 'N/A'}</span>
                     </div>
                     <div class="participant-info-row">
-                        <span class="participant-info-label">Gaming Experience:</span>
+                        <span class="participant-info-label">Gaming:</span>
                         <span class="participant-info-value">${participantInfo.gamingExperience || 'N/A'}</span>
                     </div>
                 </div>
                 
                 <div class="results-table">
-                    <h2 style="color: #ffaa00; margin-bottom: 10px; font-size: 20px;">📊 GAME RESULTS</h2>
+                    <h2 style="color: #ffaa00; margin-bottom: 8px; font-size: 17px;">📊 RESULTS</h2>
                     
                     <div class="results-row">
-                        <span class="results-label">Session Time:</span>
+                        <span class="results-label">Time:</span>
                         <span class="results-value">${minutes}m ${seconds}s</span>
                     </div>
                     
                     <div class="results-row" style="background: #3a3a00; border: 2px solid #ffaa00;">
-                        <span class="results-label">Total Accuracy:</span>
-                        <span class="results-value" style="color: #ffaa00; font-size: 18px;">${weightedTotalAccuracy}%</span>
+                        <span class="results-label">Accuracy:</span>
+                        <span class="results-value" style="color: #ffaa00; font-size: 16px;">${weightedTotalAccuracy}%</span>
                     </div>
                     
                     <div class="results-row">
-                        <span class="results-label">Total Hits:</span>
+                        <span class="results-label">Hits:</span>
                         <span class="results-value">${totalHits}</span>
                     </div>
                     
                     <div class="results-row">
-                        <span class="results-label">Total Misses:</span>
+                        <span class="results-label">Misses:</span>
                         <span class="results-value">${totalMisses}</span>
                     </div>
                     
-                    <div class="results-row">
-                        <span class="results-label">Levels Done:</span>
-                        <span class="results-value">10 / 10 ✅</span>
-                    </div>
-                    
-                    <h3 style="color: #00ff00; margin-top: 10px; margin-bottom: 6px; font-size: 14px;">⏱️ Levels:</h3>
+                    <h3 style="color: #00ff00; margin-top: 10px; margin-bottom: 6px; font-size: 14px;">⏱️ Level Times & Accuracy:</h3>
                     ${levelTimesHTML}
                     
-                    <button class="continue-btn" onclick="location.reload()" style="background: #00cc00; width: 100%; padding: 18px 40px; font-size: 20px; margin-top: 15px;">🔄 PLAY AGAIN</button>
+                    <button class="continue-btn" onclick="location.reload()" style="background: #00cc00; width: 100%; padding: 12px 30px; font-size: 16px; margin-top: 10px;">🔄 PLAY AGAIN</button>
                 </div>
             `;
             
