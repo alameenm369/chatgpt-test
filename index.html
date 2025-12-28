@@ -276,16 +276,17 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.98);
-            padding: 15px;
-            border-radius: 10px;
-            border: 3px solid #ffaa00;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #ffaa00;
             text-align: center;
             display: none;
             z-index: 100;
             max-width: 700px;
             width: 95%;
-            max-height: 95vh;
+            max-height: 98vh;
             overflow-y: auto;
+            overflow-x: hidden;
         }
         .complete-title {
             font-size: 22px;
@@ -377,6 +378,74 @@
             background: #4d4d1a;
             color: #ffaa00;
             border: 2px solid #ffaa00;
+        }
+
+        /* Mobile optimization for results page */
+        @media (max-height: 700px) {
+            .complete-title {
+                font-size: 18px !important;
+                margin-bottom: 6px !important;
+            }
+            
+            .screenshot-instruction {
+                margin: 6px 0 !important;
+                padding: 6px !important;
+                font-size: 12px !important;
+            }
+            
+            .participant-info {
+                padding: 8px !important;
+                margin: 6px 0 !important;
+            }
+            
+            .participant-info h3 {
+                font-size: 13px !important;
+                margin-bottom: 5px !important;
+            }
+            
+            .participant-info-row {
+                padding: 3px 0 !important;
+                font-size: 11px !important;
+            }
+            
+            .results-table {
+                margin: 6px auto !important;
+                padding: 8px !important;
+            }
+            
+            .results-table h2 {
+                font-size: 15px !important;
+                margin-bottom: 5px !important;
+            }
+            
+            .results-row {
+                padding: 4px 6px !important;
+                margin: 2px 0 !important;
+                font-size: 11px !important;
+            }
+            
+            .level-times-grid {
+                gap: 4px !important;
+                margin: 6px 0 !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+            }
+            
+            .level-time-box {
+                padding: 4px !important;
+                font-size: 10px !important;
+            }
+            
+            .results-table h3 {
+                font-size: 12px !important;
+                margin-top: 6px !important;
+                margin-bottom: 4px !important;
+            }
+            
+            button.continue-btn {
+                margin-top: 6px !important;
+                padding: 10px 25px !important;
+                font-size: 14px !important;
+            }
         }
     </style>
 </head>
@@ -487,6 +556,24 @@
     </div>
 
     <script>
+        // ========== GOOGLE FORMS CONFIGURATION ==========
+        // Replace with your Google Form URL and field entry IDs
+        const GOOGLE_FORM_URL = 'YOUR_GOOGLE_FORM_URL_HERE';
+        const FORM_FIELDS = {
+            name: 'entry.XXXXXXXX',
+            age: 'entry.XXXXXXXX',
+            gender: 'entry.XXXXXXXX',
+            eyeCondition: 'entry.XXXXXXXX',
+            gamingExp: 'entry.XXXXXXXX',
+            totalTime: 'entry.XXXXXXXX',
+            accuracy: 'entry.XXXXXXXX',
+            totalHits: 'entry.XXXXXXXX',
+            totalMisses: 'entry.XXXXXXXX',
+            levelTimes: 'entry.XXXXXXXX',
+            levelAccuracies: 'entry.XXXXXXXX'
+        };
+        // ================================================
+
         // Setup
         const startBtn = document.getElementById('startBtn');
         const setupScreen = document.getElementById('setupScreen');
@@ -519,6 +606,15 @@
             width: 65,
             height: 28,
             speed: 8
+        };
+
+        // Participant information storage
+        const participantInfo = {
+            name: '',
+            age: '',
+            gender: '',
+            eyeCondition: '',
+            gamingExperience: ''
         };
 
         const balls = [];
@@ -606,11 +702,6 @@
             participantInfo.eyeCondition = document.getElementById('participantEyeCondition').value;
             participantInfo.gamingExperience = document.getElementById('participantGamingExp').value;
         }
-
-        startBtn.addEventListener('click', () => {
-            setupScreen.classList.add('hidden');
-            startGame();
-        });
 
         // Level Configuration - Progressive difficulty with increasing basket size
         const LEVEL_CONFIG = {
@@ -811,6 +902,10 @@
             const weightedTotalAccuracy = Math.round(sumWeightedAccuracy / sumWeights);
             const totalHits = gameState.levelHits.reduce((sum, hits) => sum + hits, 0);
             const totalMisses = gameState.levelMisses.reduce((sum, misses) => sum + misses, 0);
+            
+            // Format level times and accuracies for Google Forms
+            const levelTimesStr = gameState.levelTimes.map((time, i) => `L${i+1}: ${time}s`).join(', ');
+            const levelAccuraciesStr = gameState.levelAccuracies.map((acc, i) => `L${i+1}: ${acc}%`).join(', ');
             
             let levelTimesHTML = '<div class="level-times-grid">';
             for (let i = 0; i < gameState.levelTimes.length; i++) {
