@@ -695,6 +695,9 @@
             participantInfo.gamingExperience = document.getElementById('participantGamingExp').value;
         }
 
+        // Level Configuration - ONLY LEVELS 9 & 10 SLIGHTLY ADJUSTED
+        // Ball sizes remain EXACTLY as original
+        // Levels 1-8 UNCHANGED
         const LEVEL_CONFIG = {
             1: { target: 100, contrast: 0.7, largeBallSize: 28, smallBallSize: 9, speed: 3.0, spawnRate: 650, basketWidth: 65, distractorBonus: 0 },
             2: { target: 100, contrast: 0.65, largeBallSize: 27, smallBallSize: 9, speed: 3.3, spawnRate: 600, basketWidth: 65, distractorBonus: 0 },
@@ -704,8 +707,10 @@
             6: { target: 150, contrast: 0.48, largeBallSize: 23, smallBallSize: 10, speed: 4.8, spawnRate: 420, basketWidth: 67, distractorBonus: 0 },
             7: { target: 200, contrast: 0.45, largeBallSize: 22, smallBallSize: 10, speed: 5.2, spawnRate: 400, basketWidth: 67, distractorBonus: 0 },
             8: { target: 200, contrast: 0.42, largeBallSize: 21, smallBallSize: 10, speed: 5.6, spawnRate: 380, basketWidth: 69, distractorBonus: 1 },
-            9: { target: 200, contrast: 0.4, largeBallSize: 20, smallBallSize: 11, speed: 6.0, spawnRate: 360, basketWidth: 69, distractorBonus: 1 },
-            10: { target: 250, contrast: 0.5, largeBallSize: 20, smallBallSize: 11, speed: 6.5, spawnRate: 340, basketWidth: 70, distractorBonus: 2 }
+            // LEVEL 9 - Very small reduction: slightly slower speed, fewer distractors
+            9: { target: 200, contrast: 0.40, largeBallSize: 20, smallBallSize: 11, speed: 5.8, spawnRate: 370, basketWidth: 69, distractorBonus: 0 },
+            // LEVEL 10 - Small reduction: slightly slower speed, slightly fewer distractors (still harder than level 9)
+            10: { target: 250, contrast: 0.50, largeBallSize: 20, smallBallSize: 11, speed: 6.2, spawnRate: 350, basketWidth: 70, distractorBonus: 1 }
         };
 
         function getLevelConfig() {
@@ -875,13 +880,9 @@
             const totalHits = gameState.levelHits.reduce((sum, hits) => sum + hits, 0);
             const totalMisses = gameState.levelMisses.reduce((sum, misses) => sum + misses, 0);
             
-            // Format level times as comma-separated: "20.4, 20.7, 18.8..."
             const levelTimesStr = gameState.levelTimes.join(', ');
-            
-            // Format level accuracies as comma-separated: "91, 79, 83..."
             const levelAccuraciesStr = gameState.levelAccuracies.join(', ');
             
-            // Store results for submission
             window.resultsData = {
                 name: participantInfo.name,
                 age: participantInfo.age,
@@ -896,7 +897,6 @@
                 levelAccuracies: levelAccuraciesStr
             };
             
-            // Build level times HTML
             let levelTimesHTML = '<div class="level-times-grid">';
             for (let i = 0; i < gameState.levelTimes.length; i++) {
                 levelTimesHTML += '<div class="level-time-box">';
@@ -907,7 +907,6 @@
             }
             levelTimesHTML += '</div>';
             
-            // Build results HTML
             let resultsHTML = '';
             resultsHTML += '<div class="complete-title">🎯 SESSION COMPLETE! 🎯</div>';
             resultsHTML += '<div class="participant-info">';
@@ -933,7 +932,6 @@
             document.getElementById('sessionComplete').innerHTML = resultsHTML;
             document.getElementById('sessionComplete').style.display = 'block';
             
-            // Auto-submit to Google Forms after 1 second
             setTimeout(function() {
                 submitToGoogleForms();
             }, 1000);
@@ -945,19 +943,16 @@
             statusDiv.className = 'submit-status sending';
             statusDiv.textContent = '⏳ Submitting to Google Forms...';
             
-            // Create iframe for submission
             const iframe = document.createElement('iframe');
             iframe.name = 'hidden_iframe';
             iframe.style.display = 'none';
             document.body.appendChild(iframe);
             
-            // Create form
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = GOOGLE_FORM_CONFIG.formUrl;
             form.target = 'hidden_iframe';
             
-            // Add all form fields
             const fields = [
                 { name: GOOGLE_FORM_CONFIG.fields.name, value: window.resultsData.name },
                 { name: GOOGLE_FORM_CONFIG.fields.age, value: window.resultsData.age },
@@ -981,17 +976,11 @@
             });
             
             document.body.appendChild(form);
-            
-            console.log('Submitting data:', window.resultsData);
-            
             form.submit();
             
-            // Show success after 2 seconds
             setTimeout(function() {
                 statusDiv.className = 'submit-status success';
                 statusDiv.textContent = '✅ Results submitted successfully to Google Forms!';
-                
-                // Clean up
                 document.body.removeChild(form);
                 document.body.removeChild(iframe);
             }, 2000);
